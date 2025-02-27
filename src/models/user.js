@@ -6,8 +6,8 @@ exports.getUser = () => {
   return execPromise("SELECT * FROM user");
 };
 
-exports.getUserById = (id) => {
-  return execPromise(`SELECT * FROM user WHERE id = ${id}`);
+exports.getUserByEmail = (email) => {
+  return execPromise(`SELECT * FROM user WHERE email = ${email}`);
 };
 
 exports.createUser = (data) => {
