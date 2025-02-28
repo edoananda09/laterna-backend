@@ -4,9 +4,10 @@ const userModels = require("../models/user");
 const { response } = require("../helpers/standardRes");
 // import bcrypt untuk enkripsi password
 const bcrypt = require("bcrypt");
+// import jesonwebtoken
 const jwt = require("jsonwebtoken");
 
-//get user
+//get user 
 exports.getUser = async (req, res) => {
   const user = await userModels.getUser();
   return response(res, 200, true, "List User", user);
@@ -15,38 +16,44 @@ exports.getUser = async (req, res) => {
 // login user with jwt
 exports.loginUser = async (req, res) => {
   const email = req.body.email;
-
+  // get user by email
   const userData = await userModels.getUserByEmail(email);
   if (userData.length === 0)
     return response(res, 404, true, "User Not Found!!");
-
+  //compare password with bcrypt compare
   const comparePassword = await bcrypt.compare(
     req.body.password,
     userData[0].password
   );
-
+  // if password true then create token
   if (comparePassword) {
+    // create token with jwt expired 1m
     const accessToken = jwt.sign(
+      
       { email: userData[0].email, user_id: userData[0].id_user },
       process.env.APP_KEY,
       { expiresIn: "1m" }
     );
-
+    // return response with token
     return response(res, 200, true, "Login success!", {
       accessToken: accessToken,
     });
   } else {
+    // if password false return response
     return response(res, 200, true, "Wrong password!!");
   }
 };
-
+// check accesstoken with jwt verify
 exports.checkAccesstoken = async (req, res) => {
   const { access_token } = req.body;
+  // check token with jwt verify
   try {
     const checkToken = jwt.verify(access_token, process.env.APP_KEY);
+    // if token still valid return response
     if (checkToken) {
       return response(res, 200, true, "Token still valid");
     }
+    // if token invalid return response
   } catch (error) {
     if (error.name === "TokenExpiredError")
       return response(res, 401, false, "Token invalid");
