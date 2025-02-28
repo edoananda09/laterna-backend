@@ -29,7 +29,7 @@ exports.loginUser = async (req, res) => {
   if (comparePassword) {
     // create token with jwt expired 1m
     const accessToken = jwt.sign(
-      
+      // payload token with email and user_id from user data 
       { email: userData[0].email, user_id: userData[0].id_user },
       process.env.APP_KEY,
       { expiresIn: "1m" }
