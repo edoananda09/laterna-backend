@@ -5,8 +5,6 @@ const { response } = require("../helpers/standardRes");
 // import bcrypt untuk enkripsi password
 const bcrypt = require("bcrypt");
 
-// import jsonwebtoken
-const jwt = require("jsonwebtoken");
 
 //get user
 exports.getUser = async (req, res) => {
@@ -18,44 +16,28 @@ exports.getUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
   const email = req.body.email;
 
-  //get user by email
-  const userData = await userModels.getUserByEmail(email);
-  if(userData.length === 0) return response(res,404,true,"Email Not Found")
+  const comparePassword = async (password, hash) => {
+    return await bcrypt.compare(password, hash);
+  };
 
-  //compare password with bcrypt
-  const comparePassword = await bcrypt.compare(req.body.password, userData[0].password);
-  //
-  if(comparePassword){
-
-    //create token dari login user dan expired token 1 menit
-    const accessToken = jwt.sign({email: userData[0].email , user_id:userData[0].id_user},process.env.APP_KEY, {expiresIn: "1m"});
-    //return response login success with token
-    return response(res,200,true,"login success",{accessToken: accessToken});
-  }else{
-    return response(res,400,false,"password is wrong")
+  const result = await userModels.getUserByEmail(email);
+  if(result.length > 0) {
+    const user = result[0];
+    const isMatch = await comparePassword(req.body.password, user.password);
+    if(isMatch) {
+      return response(res, 200, true, "Login Success", user);
+    }else {
+      return response(res, 401, false, "Password is wrong", null);
+    }
   }
 }
 
-//check access token
-exports.accessToken = async (req, res) =>{
-
-  //buat variabel token dari body
-  const {accessToken} = req.body;
-  //check token
-  try{
-    //verify token
-    const checkToken = jwt.verify(accessToken, process.env.APP_KEY);
-    //return response token valid
-    if(checkToken){
-      return response(res,200,true,"Token Valid");
-    }
-    //return response token invalid
-  }catch (error) {
-    //check token expired
-    if (error.name === "TokenExpiredError")
-      return response(res, 401, false, "Token invalid");
-  }
-};
+  // const result = await userModels.getUserByEmail(email);
+  // if(result.affectedRows === 1) {
+  //     return response(res, 200, true, `Detail users found! ${email}`, result);
+  // }else {
+  //     return response(res, 404, false, `Detail users not found! ${email}`, result);
+  // }
 
 exports.createUser = async (req, res) => {
   const body = req.body;
