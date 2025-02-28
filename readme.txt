@@ -78,3 +78,29 @@ untuk test user di postman menggunakan metode get : http://localhost:8000/user
 git remote add origin [https://github.com/edoananda09/laterna.git].git
 
 ini branch development
+
+
+
+
+
+//task-2
+1.install npm i jsonwebtoken : untuk create token
+2.import jsonwebtoken pada constrollers => const jwt = require("jsonwebtoken");
+3.Buatlah 1 function model getUserByEmail
+4.Buatlah 1 function controller loginUser,  yg menerima parameter "email"
+5.Kemudian gunakan function getUserByEmail di dalam function loginUser, jika data user ditemukan tidak perlu return apa apa, return response "User not found or invalid email!" 
+6.Jika data di temukan lanjut bandingkan / compare data user password yg didapatkan dari database dengan password yg diinput user lakukan compare dengan function const comparePassword = await bcrypt.compare("password yg diinput user", "password yg di dapat dari database")
+7.Setelah di compare jika hasil nya true, return response "Login success", jika hasil nya false return "Wrong password!"
+8.buatlah routes POST "/user/login-user"
+9.chek di postman http://localhost:8000/user/login-user /di body isi key email:"" ,dan password:""(untuk mendapatkan )token 
+"success": true,
+    "message": "login success",
+    "results": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imt1bnR1bDExQGdtYWlsLmNvbSIsInVzZXJfaWQiOjMsImlhdCI6MTc0MDcxNDY2NSwiZXhwIjoxNzQwNzE0NzI1fQ.QvHqJm3hy8VFJsAHcykUuUpPDQq3a_7ElgFazZWqCSQ"
+    }
+10.chek di postman http://localhost:8000/user/check-access-token  /di body key nya accessToken ,isi value token yang di dapat dari login user  (untuk ngchek token masih valid atau tidak)
+    "success": true,
+    "message": "Token Valid"
+route.post("/login-user", userController.loginUser);
+route.post("/check-access-token", userController.accessToken);
+
