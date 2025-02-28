@@ -4,7 +4,7 @@ const userModels = require("../models/user");
 const { response } = require("../helpers/standardRes");
 // import bcrypt untuk enkripsi password
 const bcrypt = require("bcrypt");
-
+const jwt = require("jsonwebtoken");
 
 //get user
 exports.getUser = async (req, res) => {
@@ -16,28 +16,42 @@ exports.getUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
   const email = req.body.email;
 
-  const comparePassword = async (password, hash) => {
-    return await bcrypt.compare(password, hash);
-  };
+  const userData = await userModels.getUserByEmail(email);
+  if (userData.length === 0)
+    return response(res, 404, true, "User Not Found!!");
 
-  const result = await userModels.getUserByEmail(email);
-  if(result.length > 0) {
-    const user = result[0];
-    const isMatch = await comparePassword(req.body.password, user.password);
-    if(isMatch) {
-      return response(res, 200, true, "Login Success", user);
-    }else {
-      return response(res, 401, false, "Password is wrong", null);
-    }
+  const comparePassword = await bcrypt.compare(
+    req.body.password,
+    userData[0].password
+  );
+
+  if (comparePassword) {
+    const accessToken = jwt.sign(
+      { email: userData[0].email, user_id: userData[0].id_user },
+      process.env.APP_KEY,
+      { expiresIn: "1m" }
+    );
+
+    return response(res, 200, true, "Login success!", {
+      accessToken: accessToken,
+    });
+  } else {
+    return response(res, 200, true, "Wrong password!!");
   }
-}
+};
 
-  // const result = await userModels.getUserByEmail(email);
-  // if(result.affectedRows === 1) {
-  //     return response(res, 200, true, `Detail users found! ${email}`, result);
-  // }else {
-  //     return response(res, 404, false, `Detail users not found! ${email}`, result);
-  // }
+exports.checkAccesstoken = async (req, res) => {
+  const { access_token } = req.body;
+  try {
+    const checkToken = jwt.verify(access_token, process.env.APP_KEY);
+    if (checkToken) {
+      return response(res, 200, true, "Token still valid");
+    }
+  } catch (error) {
+    if (error.name === "TokenExpiredError")
+      return response(res, 401, false, "Token invalid");
+  }
+};
 
 exports.createUser = async (req, res) => {
   const body = req.body;
