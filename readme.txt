@@ -78,3 +78,8 @@ untuk test user di postman menggunakan metode get : http://localhost:8000/user
 git remote add origin [https://github.com/edoananda09/laterna.git].git
 
 ini branch development
+
+
+
+task -3
+npm install nodemailer

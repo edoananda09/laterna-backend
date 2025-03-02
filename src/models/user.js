@@ -16,6 +16,10 @@ exports.createUser = (data) => {
   );
 };
 
+exports.updateRoleUser = (email, role) => {
+  return execPromise(`UPDATE user SET role="${role}" WHERE email="${email}"`);
+};
+
 exports.deleteUser = (id) => {
   return execPromise(`DELETE FROM user WHERE id = ${id}`);
 };

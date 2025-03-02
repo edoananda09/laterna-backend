@@ -2,6 +2,8 @@ const userModels = require("../models/user");
 const { response } = require("../helpers/standardRes");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { emailTransport } = require("../helpers/emailTransport");
+const { generateUserToken } = require("../utils/generateUserToken");
 
 exports.getUser = async (req, res) => {
   const user = await userModels.getUser();
@@ -58,9 +60,40 @@ exports.createUser = async (req, res) => {
 
   const results = await userModels.createUser(userData);
   if (results.affectedRows === 1) {
-    return response(res, 200, true, "User berhasil di tambahkan", userData);
+    const token = await generateUserToken(body.email);
+
+    try {
+      await emailTransport.sendMail({
+        from: `"noreply" <${process.env.USER_EMAIL}>`, // sender address
+        to: `${body.email}`, // list of receivers
+        subject: " verification new account app laterna", // Subject line
+        text: `Verify this token: ${token}`, // plain text body
+      });
+    } catch (error) {
+      console.error(error.message);
+    }
+
+    return response(res, 200, true, "User berhasil di tambahkan");
   } else {
-    return response(res, 500, false, "User gagal di tambahkan", userData);
+    return response(res, 500, false, "User gagal di tambahkan");
+  }
+};
+
+exports.verifyEmailController = async (req, res) => {
+  const { token, email } = req.body;
+
+  try {
+    const checkToken = jwt.verify(token, process.env.APP_KEY);
+    if (checkToken) {
+      const updateRole = await userModels.updateRoleUser(
+        email,
+        "verified_user"
+      );
+      if (updateRole.affectedRows > 0)
+        return response(res, 200, true, "User Verification Succesfully");
+    }
+  } catch (error) {
+    return response(res, 400, false, error.message);
   }
 };
 
