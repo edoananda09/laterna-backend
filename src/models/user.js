@@ -6,14 +6,18 @@ exports.getUser = () => {
   return execPromise("SELECT * FROM user");
 };
 
-exports.getUserById = (id) => {
-  return execPromise(`SELECT * FROM user WHERE id = ${id}`);
+exports.getUserByEmail = (email) => {
+  return execPromise(`SELECT * FROM user WHERE email='${email}'`);
 };
 
 exports.createUser = (data) => {
   return execPromise(
     `INSERT INTO user (email, password) VALUES ('${data.email}', '${data.password}' )`
   );
+};
+
+exports.updateRoleUser = (email, role) => {
+  return execPromise(`UPDATE user SET role="${role}" WHERE email="${email}"`);
 };
 
 exports.deleteUser = (id) => {
